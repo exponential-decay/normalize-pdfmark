@@ -26,31 +26,35 @@ from datetime import datetime
 
 class PDFDates:
 
-   ERR = "ERROR"
-   PDFFORMAT = "%Y%m%d%H%M%S"
-   NORMFORMAT = "%a %b %d %H:%M:%S %Y"
+	ERR = "ERROR"
+	PDFFORMAT = "%Y%m%d%H%M%S"
+	NORMFORMAT = "%a %b %d %H:%M:%S %Y"
+	
+	def split_timezone(self, old_date):
+		if '+' in old_date:
+			new_date = old_date.split('+', 1)
+			return new_date[0], '+' + new_date[1].replace("'", "")      
+		elif '-' in old_date:
+			new_date = old_date.split('-', 1)      
+			return new_date[0], '-' + new_date[1].replace("'", "")
+		elif '\\' in old_date:
+			new_date = old_date.split('\\', 1)
+			if len(new_date[1]) == 3:
+				new_date[1] = new_date[1] + "0"      
+			return new_date[0], '+' + new_date[1].replace("'", "")
+		else:
+			return False, ''
    
-   def split_timezone(self, old_date):
-      if '+' in old_date:
-         new_date = old_date.split('+', 1)
-         return new_date[0], '+' + new_date[1].replace("'", "")      
-      elif '-' in old_date:
-         new_date = old_date.split('-', 1)      
-         return new_date[0], '-' + new_date[1].replace("'", "")
-      else:
-         return False, ''
+	def invalid_to_pdfdate(self, old_date):
+		try:
+			dt = datetime.strptime(old_date, self.NORMFORMAT)
+			return dt.strftime(self.PDFFORMAT)
+		except ValueError:
+			return self.ERR
 
-   def invalid_to_pdfdate(self, old_date):
-      try:
-         dt = datetime.strptime(old_date, self.NORMFORMAT)
-         return dt.strftime(PDFFORMAT)
-      except ValueError:
-         return self.ERR
-
-   def valid_to_dateobj(self, old_date):
-      new_date, tz = self.split_timezone(old_date)
-      if new_date is not False:
-         return datetime.strptime(new_date, self.PDFFORMAT), tz
-      return datetime.strptime(old_date, self.NORMFORMAT), '+0000'
+	def valid_to_dateobj(self, old_date):
+		new_date, tz = self.split_timezone(old_date)
+		if new_date is not False:
+			return datetime.strptime(new_date, self.PDFFORMAT), tz
+		return datetime.strptime(old_date, self.NORMFORMAT), '+0000'
       
- 
