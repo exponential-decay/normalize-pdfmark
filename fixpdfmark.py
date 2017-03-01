@@ -43,7 +43,7 @@ class FixPDFMark:
          return mx.modmark + " (D:" + self.__fixdate__(d) + ")"
 
    def __stripall__(self, str, d):
-      return d.replace(str, '').strip()[1:-1]
+      return d.replace(str, '').strip()[1:-1].strip()
 
    def __stripall_from_dates__(self, str, d):
       return d.replace(str, '').replace('(', '').replace(')','').replace('D:','').strip()

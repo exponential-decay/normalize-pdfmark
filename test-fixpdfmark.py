@@ -43,7 +43,10 @@ class FixPDFMarkTests(TestCase):
                   "/Creator ()": "", \
                   "/ModDate(D:20161111151406+13'00')": "D:20161111151406+13'00'", \
                   "/CreationDate (Sat May 01 21:42:24 1999)": "Sat May 01 21:42:24 1999", \
-                  "/Creator ((C:\PROGRA~1\SCANDALL\SCANDALL.EXE))": "(C:\PROGRA~1\SCANDALL\SCANDALL.EXE)",}
+                  "/Creator(700 Digital Color Press )": "700 Digital Color Press", \
+                  "/Producer(700 Digital Color Press )": "700 Digital Color Press", \
+                  "/Producer(Adobe PDF Library 7.0)": "Adobe PDF Library 7.0", \
+                  "/Creator ((C:\PROGRA~1\SCANDALL\SCANDALL.EXE))": "(C:\PROGRA~1\SCANDALL\SCANDALL.EXE)"}
 
    def test_bad_date_marks(self):
       print
