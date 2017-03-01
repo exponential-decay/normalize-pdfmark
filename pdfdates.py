@@ -86,3 +86,9 @@ class PDFDates:
          return dt.strftime(self.PDFFORMAT) + tz
       return None
       
+   def valid_to_dateobj(self, old_date):
+      new_date, tz = self.split_timezone(old_date)
+      if new_date is not False:
+         return datetime.strptime(new_date, self.PDFFORMAT), tz
+      return datetime.strptime(old_date, self.NORMFORMAT), '+0000'      
+      

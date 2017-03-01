@@ -11,6 +11,7 @@ import subprocess
 import pdfmarkings as mx
 import runmodes as mod
 import pdfdates as pd
+import fixpdfmark as fixmx
 
 #calling a linux command...
 #https://www.cyberciti.biz/faq/python-execute-unix-linux-command-examples/ 
@@ -46,7 +47,7 @@ def getEarlyDate(datelist):
 
 def getPDFMark(mm, mark, f, mode):
 
-   fix = FixPDFMark()
+   fix = fixmx.FixPDFMark()
 
    mm.seek(0)
 
@@ -100,7 +101,7 @@ def getPDFMark(mm, mark, f, mode):
          
          #if we've a date, we can try and return the earliest
          if mx.allmarks[mark] == mx.PDFDATE:
-            sys.stderr.write(str(getEarlyDate(multival)))
+            sys.stderr.write("Earliest date: " + str(getEarlyDate(multival)) + "\n")
          
          return True, "Count: " + str(len(set(multival)))
       else:      
