@@ -3,7 +3,6 @@
 
 import pdfmarkings as mx
 import pdfdates as pd
-import sys
 
 #Examples
 
@@ -25,9 +24,12 @@ class FixPDFMark:
 
    def normalizemark(self, m):
       newmark = m.replace(' (', '(')
+      newmark = newmark.replace('\r', '').replace('\n', '')
+      newmark = newmark.replace(' )', ')')
       return newmark
 
    def fixdatemarks(self, dm):
+      dm = self.normalizemark(dm)
       if mx.creationdate in dm:
          d = self.__stripall__(mx.creationdate, dm)
          return mx.creationdate + " (D:" + self.__fixdate__(d) + ")"
