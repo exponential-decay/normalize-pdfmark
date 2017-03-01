@@ -1,6 +1,10 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import pdfmarkings as mx
+import pdfdates as pd
+import sys
+
 #Examples
 
 #/CreationDate (Tue Jun 15 12:03:57 1999)
@@ -20,16 +24,21 @@
 class FixPDFMark:
 
    def normalizemark(self, m):
-      mnew = m.replace(' (', '(')
-      return mnew
+      newmark = m.replace(' (', '(')
+      return newmark
 
-   def convertdate(self, d1, d2):
-      #test old date and convert to new date
-      return
+   def fixdatemarks(self, dm):
+      if mx.creationdate in dm:
+         d = self.__stripall__(mx.creationdate, dm)
+         return mx.creationdate + " (D:" + self.__fixdate__(d) + ")"
+      elif mx.modmark in dm:
+         d = self.__stripall__(mx.modmark, dm)
+         return mx.modmark + " (D:" + self.__fixdate__(d) + ")"
 
-   def recordoriginaldates(self, f):
-      #list: path + mod date + create date
-      return
+   def __stripall__(self, str, d):
+      return d.replace(str, '').replace('(', '').replace(')','').replace('D:','').strip()
 
-   def replaceoriginaldates(self, f):
-      return
+   def __fixdate__(self, d):
+      datefix = pd.PDFDates()   
+      d = datefix.invalid_to_pdfdate(d)
+      return d

@@ -55,6 +55,9 @@ class PDFDates:
    #spit it out again as something we can use...
    def invalid_to_pdfdate(self, old_date):
       
+      #remove excess characters if we find any...
+      old_date.strip()
+      
       try:
          dt = datetime.strptime(old_date, self.PDFFORMAT)
          return dt.strftime(self.PDFFORMAT)
@@ -68,14 +71,14 @@ class PDFDates:
          None
 
       try:
-         new_date = self.valid_tz_to_dateobj(old_date)
+         new_date = self.valid_tz_to_datestr(old_date)
          return new_date
       except ValueError:
          None
          
       return None
       
-   def valid_tz_to_dateobj(self, old_date):
+   def valid_tz_to_datestr(self, old_date):
       new_date, tz = self.split_timezone(old_date)
       if new_date is not False:
          dt = datetime.strptime(new_date, self.PDFFORMAT)
