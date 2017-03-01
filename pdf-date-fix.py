@@ -138,7 +138,7 @@ def normalizepdf(loc, ext, mode):
 
    sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n")
 
-   sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version",'  + '\n')
+   sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version","EOF-marks"'  + '\n')
 
    for f in filelist:   
    
@@ -151,6 +151,9 @@ def normalizepdf(loc, ext, mode):
          
          #get pdf version
          version = mm.read(8)
+         mm.seek(-8, os.SEEK_END)
+         eof = mm.read(8)
+         eof = str(eof).strip().replace('%','')
          
          for mark in mx.allmarks.keys():
             out = getPDFMark(mm, mark, f, mode)
@@ -161,7 +164,7 @@ def normalizepdf(loc, ext, mode):
                   row = row + '"' + str(out) + '",'
 
          if mode is mod.MODTEST:
-            row = row + '"' + str(version) + '"'
+            row = row + '"' + str(version) + '",' + '"#' + str(eof) + '#"'  #hashes to indicate data gaps
             sys.stdout.write(row + "\n")
 
       #recorddates(f)
