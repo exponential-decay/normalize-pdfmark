@@ -15,23 +15,6 @@ import pdfdates as pd
 #calling a linux command...
 #https://www.cyberciti.biz/faq/python-execute-unix-linux-command-examples/ 
 
-class FixPDFMark:
-
-   def normalizemark(self, m):
-      mnew = m.replace(' (', '(')
-      return mnew
-
-   def convertdate(self, d1, d2):
-      #test old date and convert to new date
-      return
-
-   def recordoriginaldates(self, f):
-      #list: path + mod date + create date
-      return
-
-   def replaceoriginaldates(self, f):
-      return
-
 #http://stackoverflow.com/a/14822210
 #return bytes in megabytes
 def convert_size(size_bytes):
