@@ -35,6 +35,15 @@ class FixPDFMarkTests(TestCase):
                      "/ModDate(D:20071206114242+13'00')": "/ModDate (D:20071206114242+13'00)", \
                      "/ModDate(20071206114242+13'00' )": "/ModDate (D:20071206114242+13'00)"}
 
+   stringmarks = {"/Producer (Pixel Translations (PIXPDF Ver.1.38))": "Pixel Translations (PIXPDF Ver.1.38)", \
+                  "/Producer(GPL Ghostscript 9.19)": "GPL Ghostscript 9.19", \
+                  "/Creator (DigiPath\000)": "DigiPath\000", \
+                  "/Creator (C:\PROGRA~1\SCANDALL\SCANDALL.EXE)": "C:\PROGRA~1\SCANDALL\SCANDALL.EXE", \
+                  "/Title(0396)": "0396", \
+                  "/Creator ()": "", \
+                  "/ModDate(D:20161111151406+13'00')": "D:20161111151406+13'00'", \
+                  "/CreationDate (Sat May 01 21:42:24 1999)": "Sat May 01 21:42:24 1999"}
+
    def test_bad_date_marks(self):
       print
       for d in self.baddatemarks.keys():
@@ -44,7 +53,17 @@ class FixPDFMarkTests(TestCase):
          else:
             print "Failed value: " + str(d)
             self.assertIsNotNone(val)
-   
+
+   def test_get_strings(self):
+      print
+      for d in self.stringmarks.keys():
+         val = self.fixme.getstrings(d)
+         if val != None:
+            self.assertEqual(val, self.stringmarks[d])
+         else:
+            print "Failed value: " + str(d)
+            self.assertIsNotNone(val)
+
 def main():
    suite = TestLoader().loadTestsFromTestCase(FixPDFMarkTests)
    TextTestRunner(verbosity=2).run(suite)

@@ -28,16 +28,24 @@ class FixPDFMark:
       newmark = newmark.replace(' )', ')')
       return newmark
 
+   def getstrings(self, sm):
+      for m in mx.allmarks:
+         if m in sm:
+            return self.__stripall__(m, sm)
+
    def fixdatemarks(self, dm):
       dm = self.normalizemark(dm)
       if mx.creationdate in dm:
-         d = self.__stripall__(mx.creationdate, dm)
+         d = self.__stripall_from_dates__(mx.creationdate, dm)
          return mx.creationdate + " (D:" + self.__fixdate__(d) + ")"
       elif mx.modmark in dm:
-         d = self.__stripall__(mx.modmark, dm)
+         d = self.__stripall_from_dates__(mx.modmark, dm)
          return mx.modmark + " (D:" + self.__fixdate__(d) + ")"
 
    def __stripall__(self, str, d):
+      return d.replace(str, '').strip()[1:-1]
+
+   def __stripall_from_dates__(self, str, d):
       return d.replace(str, '').replace('(', '').replace(')','').replace('D:','').strip()
 
    def __fixdate__(self, d):
