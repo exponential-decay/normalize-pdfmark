@@ -116,13 +116,31 @@ def getPDFMark(mm, mark, f, mode):
       if mode is mod.MODFIX:
          return pdfdate
 
+def normalize_eof(eof):
+   return str(eof).strip().replace('%','').replace('\r', '').replace('\n', '')
+
+def get_version(mm):
+   mm.seek(0)
+   return str(mm.read(8)).strip().replace('\r', '').replace('\n', '').replace('\00', 'NULL')
+   
+def check_eof(mm):
+   mm.seek(-8, os.SEEK_END)
+   eof = mm.read(8)
+   
+   #Check for EOF
+   if "EOF" in eof:
+      return str(True)
+   else:
+      #Hashes used to spot other data issues between returned value...
+      return '#' + normalize_eof(eof) + '#'
+
 def normalizepdf(loc, ext, mode):
 
    filelist = folderscan(args.loc, ext)
 
    sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n")
 
-   sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version","EOF-marks"'  + '\n')
+   sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version","eof"'  + '\n')
 
    for f in filelist:   
    
@@ -134,10 +152,8 @@ def normalizepdf(loc, ext, mode):
          mm = mmap.mmap(f.fileno(), 0)
          
          #get pdf version
-         version = mm.read(8)
-         mm.seek(-8, os.SEEK_END)
-         eof = mm.read(8)
-         eof = str(eof).strip().replace('%','')
+         version = get_version(mm)
+         eof = check_eof(mm)
          
          for mark in mx.allmarks.keys():
             out = getPDFMark(mm, mark, f, mode)
@@ -148,7 +164,7 @@ def normalizepdf(loc, ext, mode):
                   row = row + '"' + str(out) + '",'
 
          if mode is mod.MODTEST:
-            row = row + '"' + str(version) + '",' + '"#' + str(eof) + '#"'  #hashes to indicate data gaps
+            row = row + '"' + str(version) + '",' + '"' + str(eof) + '"'  #hashes to indicate data gaps
             sys.stdout.write(row + "\n")
 
       #recorddates(f)
