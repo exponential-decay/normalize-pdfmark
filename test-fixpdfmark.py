@@ -42,7 +42,8 @@ class FixPDFMarkTests(TestCase):
                   "/Title(0396)": "0396", \
                   "/Creator ()": "", \
                   "/ModDate(D:20161111151406+13'00')": "D:20161111151406+13'00'", \
-                  "/CreationDate (Sat May 01 21:42:24 1999)": "Sat May 01 21:42:24 1999"}
+                  "/CreationDate (Sat May 01 21:42:24 1999)": "Sat May 01 21:42:24 1999", \
+                  "/Creator ((C:\PROGRA~1\SCANDALL\SCANDALL.EXE))": "(C:\PROGRA~1\SCANDALL\SCANDALL.EXE)",}
 
    def test_bad_date_marks(self):
       print
