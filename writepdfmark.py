@@ -16,6 +16,7 @@ import sys
 
 #helper class to persist state
 class PDFMark:
+   writeme = False
    def __init__(self):
       self.title = False
       self.author = False
@@ -79,7 +80,8 @@ class WritePDFMark:
    def __init_from_object__(self, pdfmark):
       self.custom = False     #until set at a later date
       if isinstance(pdfmark, PDFMark) is True:
-         self.writemark = True   
+         if pdfmark.writeme != False:
+            self.writemark = True   
          if pdfmark.title != False: 
             self.title = pdfmark.title
          if pdfmark.author != False:
@@ -125,7 +127,9 @@ class WritePDFMark:
    def __format_mark__(self, key, value):
       return key + " (" + value + ")" + "\n"
 
-   def write_mark(self):
+   def write_mark(self, fname=False):
+      if fname != False:
+         self.filename = fname
       if self.writemark is True:
          with open(self.__getpath__(), 'wb') as f:
             #beginning of pdfmark

@@ -120,7 +120,7 @@ def getPDFMark(mm, mark, f, mode):
          return mx.PDFMARKOKAY, pdfdate.replace('\r', '').replace('\n', '')
 
 def normalize_eof(eof):
-   return str(eof).strip().replace('%','').replace('\r', '').replace('\n', '')
+   return str(eof).strip().replace('%','').replace('\r', '').replace('\n', '').replace('\00', 'NULL')
 
 def get_version(mm):
    mm.seek(0)
@@ -175,20 +175,23 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
          #datetype to fix...
          print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", fx.getstrings(fx.fixdatemarks(out[1])) + "\n"
          pdfmark.creationdate = fx.getstrings(fx.fixdatemarks(out[1]))
+         pdfmark.writeme=True
       else:
          #Nothing else is a correction, just an extraction and movement...
-         if mark == mx.producermark:
-            provenance = create_provenance(provenance, "Original Producer was", str(fx.getstrings(out[1])))
-         elif mark == mx.creatormark:
-            provenance = create_provenance(provenance, "Original Creator was", str(fx.getstrings(out[1])))
-         elif mark == mx.titlemark:
-            provenance = create_provenance(provenance, "Original Title was", str(fx.getstrings(out[1])))
-         elif mark == mx.authormark:
-            provenance = create_provenance(provenance, "Original Author was", str(fx.getstrings(out[1])))
-         elif mark == mx.subjectmark:
-            provenance = create_provenance(provenance, "Original Subject was", str(fx.getstrings(out[1])))
-         elif mark == mx.keywordmark:
-            provenance = create_provenance(provenance, "Original Keywords were", str(fx.getstrings(out[1])))
+         val = str(fx.getstrings(out[1]))
+         if val != "":
+            if mark == mx.producermark:
+               provenance = create_provenance(provenance, "Original Producer was", val)
+            elif mark == mx.creatormark:
+               provenance = create_provenance(provenance, "Original Creator was", val)
+            elif mark == mx.titlemark:
+               provenance = create_provenance(provenance, "Original Title was", val)
+            elif mark == mx.authormark:
+               provenance = create_provenance(provenance, "Original Author was", val)
+            elif mark == mx.subjectmark:
+               provenance = create_provenance(provenance, "Original Subject was", val)
+            elif mark == mx.keywordmark:
+               provenance = create_provenance(provenance, "Original Keywords were", val)
       return provenance.strip()
    elif mode == mod.MODFIX:   
       return 
@@ -204,6 +207,10 @@ def dry_and_fix_mode(filelist, mode):
          checkdate = getPDFMark(mm, mx.creationdate, f, mode)
          moddate = getPDFMark(mm, mx.modmark, f, mode)
          if checkdate is False and moddate is False:
+            #NB. If both dates are missing from the file we ignore it because
+            #We're not seeing the fields causing the validation issues. If one
+            #date or the other are not there we still need to do a rewrite to fix
+            #validation issues sent to us via JHOVE (and verified in PDFMark reference)
             sys.stderr.write(f.name + ": " + "creation and modification dates missing from file. Fix mode will ignore file.")
          else:
             for mark in mx.allmarks.keys():
@@ -219,8 +226,15 @@ def dry_and_fix_mode(filelist, mode):
                      sys.exit(1)
 
       b = wx.WritePDFMark().__init_from_object__(pdfmark)
-      b.add_custom({"Provenance": provenance, "Comment": Version().getversion()})
-      b.write_mark_str()
+      if len(provenance) != 0:
+         pdfmark.writeme=True
+         b.add_custom({"Provenance": provenance, "Comment": Version().getversion()})
+      if pdfmark.writeme == True:
+         b.title = os.path.basename(f.name)         
+         b.write_mark_str()
+         b.write_mark("test_pdfmark.txt")
+      else:
+         sys.stderr.write("File not to be re-written: " + f.name + "\n")
       print
 
 def normalizepdf(loc, ext, mode):
