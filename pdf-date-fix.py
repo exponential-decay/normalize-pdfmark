@@ -19,7 +19,7 @@ import writepdfmark as wx
 
 class Version:
    def getversion(self):
-      return "0.0.1"
+      return "Version 0.0.1, Found on [GitHub [LINK]]"
 
 #return bytes in megabytes
 #http://stackoverflow.com/a/14822210
@@ -162,19 +162,34 @@ def test_mode(filelist, mode):
          row = row + '"' + str(version) + '",' + '"' + str(eof) + '"'  #hashes to indicate data gaps
          sys.stdout.write(row + "\n")
 
+#add to provenance
+def create_provenance(provenance, note, value):
+   provenance = provenance + note + ": " + value + ". "
+   return provenance
+
 #Try and figure out the results of our inputs and whether they will work for us...
-def process_output(f, out, mark, type, pdfmark, mode):
+def process_output(f, out, mark, type, pdfmark, provenance, mode):
    fx = fixmx.FixPDFMark()
    if mode == mod.MODDRY:
       if type == mx.PDFDATE:
          #datetype to fix...
-         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", fx.getstrings(fx.fixdatemarks(out[1]))
-         
+         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", fx.getstrings(fx.fixdatemarks(out[1])) + "\n"
          pdfmark.creationdate = fx.getstrings(fx.fixdatemarks(out[1]))
-         
-         
       else:
-         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", str(fx.getstrings(out[1]))
+         #Nothing else is a correction, just an extraction and movement...
+         if mark == mx.producermark:
+            provenance = create_provenance(provenance, "Original Producer was", str(fx.getstrings(out[1])))
+         elif mark == mx.creatormark:
+            provenance = create_provenance(provenance, "Original Creator was", str(fx.getstrings(out[1])))
+         elif mark == mx.titlemark:
+            provenance = create_provenance(provenance, "Original Title was", str(fx.getstrings(out[1])))
+         elif mark == mx.authormark:
+            provenance = create_provenance(provenance, "Original Author was", str(fx.getstrings(out[1])))
+         elif mark == mx.subjectmark:
+            provenance = create_provenance(provenance, "Original Subject was", str(fx.getstrings(out[1])))
+         elif mark == mx.keywordmark:
+            provenance = create_provenance(provenance, "Original Keywords were", str(fx.getstrings(out[1])))
+      return provenance.strip()
    elif mode == mod.MODFIX:   
       return 
  
@@ -183,6 +198,7 @@ def dry_and_fix_mode(filelist, mode):
 
    for f in filelist:
       pdfmark = wx.PDFMark()
+      provenance = ""
       with open(f, "r+b") as f:   
          mm = mmap.mmap(f.fileno(), 0)        
          checkdate = getPDFMark(mm, mx.creationdate, f, mode)
@@ -197,12 +213,15 @@ def dry_and_fix_mode(filelist, mode):
                   out = getPDFMark(mm, mark, f, mode)
                   if out[0] is not mx.PDFMARKNONE and out[0] is not mx.PDFMARKTOOMANY:
                      #process data                   
-                     process_output(f, out, mark, mx.allmarks[mark], pdfmark, mode)
+                     provenance = process_output(f, out, mark, mx.allmarks[mark], pdfmark, provenance, mode)
                   elif out[0] is mx.PDFMARKTOOMANY:
                      sys.stderr.write("Too many " + str(mark) + " fields in file to work with. File: " + f.name + "\n")
                      sys.exit(1)
 
-      print str(pdfmark)
+      b = wx.WritePDFMark().__init_from_object__(pdfmark)
+      b.add_custom({"Provenance": provenance, "Comment": Version().getversion()})
+      b.write_mark_str()
+      print
 
 def normalizepdf(loc, ext, mode):
 
