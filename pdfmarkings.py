@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#Some data states to return...
+PDFMARKNONE = "We haven't a PDF Mark to work with at all."
+PDFMARKTOOMANY = "We have more than one data value to make a decision on."
+PDFMARKSETOKAY = "We have found more than one value, but just a single value within a set."
+PDFMARKOKAY = "The data we have found is okay to work with."
+
 #TYPES
 PDFDATE = "DATE"
 PDFSTRING = "STRING"
@@ -34,14 +40,10 @@ subjectmark = '\x2F\x53\x75\x62\x6A\x65\x63\x74'
 keywordmark = '\x2F\x4B\x65\x79\x77\x6F\x72\x64\x73'
 
 #/Allmarks, for test flag
-allmarks = {creationdate: PDFDATE, producermark: PDFSTRING, creatormark: PDFSTRING, modmark: PDFDATE, \
+allmarks = {creationdate: PDFDATE, modmark: PDFDATE, producermark: PDFSTRING, creatormark: PDFSTRING, \
    titlemark: PDFSTRING, authormark: PDFSTRING, subjectmark: PDFSTRING, keywordmark: PDFKEYS}
 
-#/fixmarks, for dry, and fix flags
-fixmarks = [creationdate, producermark, creatormark, titlemark, authormark, subjectmark, keywordmark]
-
 #Terminators for PDF Mark sections
-
 #endmark )\n
 endmarkone = '\x29\x0A'
 #endmark )[space]
