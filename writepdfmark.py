@@ -70,7 +70,7 @@ class WritePDFMark:
       return customlist
 
    def __format_mark__(self, key, value):
-      return key + "(" + value + ")" + "\n"
+      return key + " (" + value + ")" + "\n"
 
    def write_mark(self):
       if self.writemark is True:
