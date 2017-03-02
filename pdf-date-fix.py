@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#calling a linux command...
+#https://www.cyberciti.biz/faq/python-execute-unix-linux-command-examples/
+
 import os
 import sys
 import time
@@ -13,11 +16,12 @@ import runmodes as mod
 import pdfdates as pd
 import fixpdfmark as fixmx
 
-#calling a linux command...
-#https://www.cyberciti.biz/faq/python-execute-unix-linux-command-examples/ 
+class Version:
+   def getversion(self):
+      return "0.0.1"
 
-#http://stackoverflow.com/a/14822210
 #return bytes in megabytes
+#http://stackoverflow.com/a/14822210
 def convert_size(size_bytes):
    if (size_bytes == 0):
        return '0B'
