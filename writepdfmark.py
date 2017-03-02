@@ -66,8 +66,11 @@ class WritePDFMark:
    def __custom_to_mark__(self):
       customlist = []
       for cm in self.customdict.keys():
-         customlist.append("/" + cm + "(" + self.customdict[cm] + ")")
+         customlist.append("/" + self.__format_mark__(cm, self.customdict[cm]))
       return customlist
+
+   def __format_mark__(self, key, value):
+      return key + "(" + value + ")" + "\n"
 
    def write_mark(self):
       if self.writemark is True:
@@ -75,26 +78,26 @@ class WritePDFMark:
             #beginning of pdfmark
             f.write('[ ')
             if self.title != False: 
-               f.write(self.TITLE + "(" + self.title + ")" + "\n")
+               f.write(self.__format_mark__(self.TITLE, self.title))
             if self.author != False:
-               f.write(self.AUTHOR + "(" + self.author + ")" + "\n")
+               f.write(self.__format_mark__(self.AUTHOR, self.author))
             if self.subject != False:
-               f.write(self.SUBJECT + "(" + self.subject + ")" + "\n") 
+               f.write(self.__format_mark__(self.SUBJECT, self.subject))
             if self.keywords != False:
-               f.write(self.KEYWORDS + "(" + self.keywords + ")" + "\n") 
+               f.write(self.__format_mark__(self.KEYWORDS, self.keywords))
             if self.moddate != False:
-               f.write(self.MODDATE + "(" + self.moddate + ")" + "\n") 
+               f.write(self.__format_mark__(self.MODDATE, self.moddate))
             if self.creationdate != False:
-               f.write(self.CREATIONDATE + "(" + self.creationdate + ")" + "\n") 
+               f.write(self.__format_mark__(self.CREATIONDATE, self.creationdate))
             if self.creator != False:
-               f.write(self.CREATOR + "(" + self.creator + ")" + "\n")
+               f.write(self.__format_mark__(self.CREATOR, self.creator))
             if self.producer != False:
-               f.write(self.PRODUCER + "(" + self.producer + ")" + "\n")
+               f.write(self.__format_mark__(self.PRODUCER, self.producer))
             
             #add custome keys and values if True
             if self.custom is True:
                for cl in self.__custom_to_mark__():
-                  f.write(cl + "\n")
+                  f.write(cl)
                
             #Always write (end of pdfmark): 
             f.write(self.DOCINFO + "\n")   
@@ -111,8 +114,7 @@ def main():
    a = WritePDFMark(False, False, False, False, False, False, "ABC", False)
    a.add_custom({'Provenance': 'This file used to be.', 'Comment': 'Processed by the tool [abc]'})
    a.write_mark()
-   print a.__getpath__()
-   #print a.__delpath__()
+   print "PDF mark writing complete."
 
 if __name__ == "__main__":      
    main()
