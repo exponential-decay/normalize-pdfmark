@@ -14,6 +14,19 @@ import sys
   /Producer (PDF producer name or note)
   /DOCINFO pdfmark'''
 
+#helper class to persist state
+class PDFMark:
+   def __init__(self):
+      self.title = False
+      self.author = False
+      self.subject = False
+      self.keywords = False
+      self.moddate = False
+      self.creationdate = False 
+      self.creator = False
+      self.producer = False
+      self.custom = False     #needs to be a dict object
+      
 #functions related to writing a PDF mark file
 class WritePDFMark:
 
@@ -33,8 +46,19 @@ class WritePDFMark:
    
    DOCINFO = "/DOCINFO pdfmark"
 
-   def __init__(self, title=False, author=False, subject=False, keywords=False, moddate=False, creationdate=False, creator=False, producer=False):
-      self.custom = False #until set at a later date
+   def __init__(self):
+      self.writemark = False   
+      self.title = False
+      self.author = False
+      self.subject = False
+      self.keywords = False
+      self.moddate = False
+      self.creationdate = False
+      self.creator = False
+      self.producer = False
+
+   def __init_from_string__(self, title=False, author=False, subject=False, keywords=False, moddate=False, creationdate=False, creator=False, producer=False):
+      self.custom = False     #until set at a later date
       if author != False or subject != False or keywords != False \
          or moddate != False or creationdate or creator != False \
             or producer != False:         
@@ -46,9 +70,38 @@ class WritePDFMark:
          self.moddate = self.__tostring__(moddate)
          self.creationdate = self.__tostring__(creationdate)
          self.creator = self.__tostring__(creator)
-         self.producer = self.__tostring__(producer)      
+         self.producer = self.__tostring__(producer)
+         return self
       else:
          self.writemark = False
+         return self
+
+   def __init_from_object__(self, pdfmark):
+      self.custom = False     #until set at a later date
+      if isinstance(pdfmark, PDFMark) is True:
+         self.writemark = True   
+         if pdfmark.title != False: 
+            self.title = pdfmark.title
+         if pdfmark.author != False:
+            self.author = pdfmark.author
+         if pdfmark.subject != False:
+            self.subject = pdfmark.subject
+         if pdfmark.keywords != False:
+            self.keywords = pdfmark.keywords
+         if pdfmark.moddate != False:
+            self.moddate = pdfmark.moddate
+         if pdfmark.creationdate != False:
+            self.creationdate = pdfmark.creationdate
+         if pdfmark.creator != False:
+            self.creator = pdfmark.creator
+         if pdfmark.producer != False:
+            self.producer = pdfmark.producer
+         if pdfmark.custom != False:
+            self.add_custom(pdfmark.custom)
+         return self
+      else:
+         self.writemark = None
+         return self
 
    def __tostring__(self, val):
       if val != False:
@@ -101,7 +154,35 @@ class WritePDFMark:
                
             #Always write (end of pdfmark): 
             f.write(self.DOCINFO + "\n")   
-      return
+
+   def write_mark_str(self):
+      if self.writemark is True:
+         #beginning of pdfmark
+         sys.stdout.write('[ ')
+         if self.title != False: 
+            sys.stdout.write(self.__format_mark__(self.TITLE, self.title))
+         if self.author != False:
+            sys.stdout.write(self.__format_mark__(self.AUTHOR, self.author))
+         if self.subject != False:
+            sys.stdout.write(self.__format_mark__(self.SUBJECT, self.subject))
+         if self.keywords != False:
+            sys.stdout.write(self.__format_mark__(self.KEYWORDS, self.keywords))
+         if self.moddate != False:
+            sys.stdout.write(self.__format_mark__(self.MODDATE, self.moddate))
+         if self.creationdate != False:
+            sys.stdout.write(self.__format_mark__(self.CREATIONDATE, self.creationdate))
+         if self.creator != False:
+            sys.stdout.write(self.__format_mark__(self.CREATOR, self.creator))
+         if self.producer != False:
+            sys.stdout.write(self.__format_mark__(self.PRODUCER, self.producer))
+         
+         #add custome keys and values if True
+         if self.custom is True:
+            for cl in self.__custom_to_mark__():
+               sys.stdout.write(cl)
+            
+         #Always write (end of pdfmark): 
+         sys.stdout.write(self.DOCINFO + "\n")   
 
    def __getpath__(self):
       return os.getcwd() + "\\" + self.filename
@@ -111,11 +192,19 @@ class WritePDFMark:
       
 def main():
 
+   pdfmark = PDFMark()
+   pdfmark.title = "A title"
+   pdfmark.custom = {'Provenance': 'This file used to be.', 'Comment': 'Processed by the tool [abc]'}
+   b = WritePDFMark().__init_from_object__(pdfmark)
+   b.write_mark_str()
+   
    #write default pdf mark file
-   a = WritePDFMark("Document title", "Author name", "Subject description", "comma, separated, keywords", \
+   a = WritePDFMark().__init_from_string__("Document title", "Author name", "Subject description", "comma, separated, keywords", \
                         "D:20061204092842", "D:20061204092842", "application name or creator note", "PDF producer name or note")
+                        
    a.add_custom({'Provenance': 'This file used to be.', 'Comment': 'Processed by the tool [abc]'})
    a.write_mark()
+   
    print "PDF mark writing complete."
 
 if __name__ == "__main__":      

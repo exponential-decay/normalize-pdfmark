@@ -15,6 +15,7 @@ import pdfmarkings as mx
 import runmodes as mod
 import pdfdates as pd
 import fixpdfmark as fixmx
+import writepdfmark as wx
 
 class Version:
    def getversion(self):
@@ -95,7 +96,7 @@ def getPDFMark(mm, mark, f, mode):
    if count < 1:
       #PDF Mark Not Found...
       #sys.stderr.write(f.name + ": " + str(mark) + " string not found.\n")
-      return mx.PDFMARKNONE
+      return mx.PDFMARKNONE, False
       
    #IF count is greater than one, we have too much data to work with
    elif count > 1: 
@@ -162,11 +163,28 @@ def test_mode(filelist, mode):
          sys.stdout.write(row + "\n")
 
 #Try and figure out the results of our inputs and whether they will work for us...
-def dry_mode(filelist, mode):
-   for f in filelist:
-      with open(f, "r+b") as f:   
-         mm = mmap.mmap(f.fileno(), 0)
+def process_output(f, out, mark, type, pdfmark, mode):
+   fx = fixmx.FixPDFMark()
+   if mode == mod.MODDRY:
+      if type == mx.PDFDATE:
+         #datetype to fix...
+         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", fx.getstrings(fx.fixdatemarks(out[1]))
          
+         pdfmark.creationdate = fx.getstrings(fx.fixdatemarks(out[1]))
+         
+         
+      else:
+         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", str(fx.getstrings(out[1]))
+   elif mode == mod.MODFIX:   
+      return 
+ 
+#Process the files.
+def dry_and_fix_mode(filelist, mode):
+
+   for f in filelist:
+      pdfmark = wx.PDFMark()
+      with open(f, "r+b") as f:   
+         mm = mmap.mmap(f.fileno(), 0)        
          checkdate = getPDFMark(mm, mx.creationdate, f, mode)
          moddate = getPDFMark(mm, mx.modmark, f, mode)
          if checkdate is False and moddate is False:
@@ -177,16 +195,14 @@ def dry_mode(filelist, mode):
                #be written as today's date during the rewrite
                if mark != mx.modmark:
                   out = getPDFMark(mm, mark, f, mode)
-                  if out is not mx.PDFMARKNONE and out is not mx.PDFMARKTOOMANY:
-                     #process data
-                     print out
-                  elif out is mx.PDFMARKTOOMANY:
+                  if out[0] is not mx.PDFMARKNONE and out[0] is not mx.PDFMARKTOOMANY:
+                     #process data                   
+                     process_output(f, out, mark, mx.allmarks[mark], pdfmark, mode)
+                  elif out[0] is mx.PDFMARKTOOMANY:
                      sys.stderr.write("Too many " + str(mark) + " fields in file to work with. File: " + f.name + "\n")
                      sys.exit(1)
 
-#Perform a full fix on our files... will write new data to files! 
-def fix_mode(filelist, mode):
-   print "fix mode"
+      print str(pdfmark)
 
 def normalizepdf(loc, ext, mode):
 
@@ -197,10 +213,10 @@ def normalizepdf(loc, ext, mode):
       test_mode(filelist, mode)
 
    elif mode == mod.MODDRY:
-      dry_mode(filelist, mode)
+      dry_and_fix_mode(filelist, mode)
    
    elif mode == mod.MODFIX:
-      fix_mode(filelist, mode)
+      dry_and_fix_mode(filelist, mode)
       
       #recorddates(f)
 
