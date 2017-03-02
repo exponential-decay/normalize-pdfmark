@@ -138,16 +138,14 @@ def check_eof(mm):
       #Hashes used to spot other data issues between returned value...
       return '#' + normalize_eof(eof) + '#'
 
-def normalizepdf(loc, ext, mode):
-
-   filelist = folderscan(args.loc, ext)
-
+#Test mode: Output a CSV with all marks that we know about to understand
+#what to migrate when converting via GhostScript...
+def test_mode(filelist, mode):
+   
    sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n")
-
    sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version","eof"'  + '\n')
 
    for f in filelist:   
-   
       fsize = convert_size(os.path.getsize(f))
    
       with open(f, "r+b") as f:
@@ -161,16 +159,33 @@ def normalizepdf(loc, ext, mode):
          
          for mark in mx.allmarks.keys():
             out = getPDFMark(mm, mark, f, mode)
-            if mode is mod.MODTEST:
-               if out != False:
-                  row = row + '"' + str(out[0]) + ': ' + str(out[1]) + '",'
-               else:
-                  row = row + '"' + str(out) + '",'
+            if out != False:
+               row = row + '"' + str(out[0]) + ': ' + str(out[1]) + '",'
+            else:
+               row = row + '"' + str(out) + '",'
 
-         if mode is mod.MODTEST:
-            row = row + '"' + str(version) + '",' + '"' + str(eof) + '"'  #hashes to indicate data gaps
-            sys.stdout.write(row + "\n")
+         row = row + '"' + str(version) + '",' + '"' + str(eof) + '"'  #hashes to indicate data gaps
+         sys.stdout.write(row + "\n")
 
+def dry_mode(filelist, mode):
+   print "dry mode"
+   
+def fix_mode(filelist, mode):
+   print "fix mode"
+
+def normalizepdf(loc, ext, mode):
+
+   filelist = folderscan(args.loc, ext)
+
+   if mode == mod.MODTEST:
+      test_mode(filelist, mode)
+
+   elif mode == mod.MODDRY:
+      dry_mode(filelist, mode)
+   
+   elif mode == mod.MODFIX:
+      fix_mode(filelist, mode)
+      
       #recorddates(f)
 
       #call pdf command here...
@@ -180,8 +195,8 @@ def normalizepdf(loc, ext, mode):
 
       #replaceoriginaldates(f)
 
-   sys.stderr.write("No. old files: " + str(len(filelist)) + "\n")
-   sys.stderr.write("No. new files: " + str(len(filelist)) + "\n")
+   #sys.stderr.write("No. old files: " + str(len(filelist)) + "\n")
+   #sys.stderr.write("No. new files: " + str(len(filelist)) + "\n")
 
 def folderscan(loc, ext):
    flist = []

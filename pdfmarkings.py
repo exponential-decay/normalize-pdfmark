@@ -38,7 +38,7 @@ allmarks = {creationdate: PDFDATE, producermark: PDFSTRING, creatormark: PDFSTRI
    titlemark: PDFSTRING, authormark: PDFSTRING, subjectmark: PDFSTRING, keywordmark: PDFKEYS}
 
 #/fixmarks, for dry, and fix flags
-fixmarks = [creationdate, producermark, creatormark, modmark, titlemark, authormark, subjectmark, keywordmark]
+fixmarks = [creationdate, producermark, creatormark, titlemark, authormark, subjectmark, keywordmark]
 
 #Terminators for PDF Mark sections
 
