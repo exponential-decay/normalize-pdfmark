@@ -111,7 +111,9 @@ class WritePDFMark:
       
 def main():
 
-   a = WritePDFMark(False, False, False, False, False, False, "ABC", False)
+   #write default pdf mark file
+   a = WritePDFMark("Document title", "Author name", "Subject description", "comma, separated, keywords", \
+                        "D:20061204092842", "D:20061204092842", "application name or creator note", "PDF producer name or note")
    a.add_custom({'Provenance': 'This file used to be.', 'Comment': 'Processed by the tool [abc]'})
    a.write_mark()
    print "PDF mark writing complete."
