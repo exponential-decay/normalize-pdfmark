@@ -249,8 +249,9 @@ def fix_subprocess(fname, prefix):
    newname = os.path.join(dirname + os.path.sep + newf)
    #print fname
    
-   p = subprocess.Popen(["gs", "-o", newf, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, err = p.communicate()
+   time.sleep(10)
    
 def normalizepdf(loc, ext, mode):
 
