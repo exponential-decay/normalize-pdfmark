@@ -20,6 +20,8 @@ import writepdfmark as wx
 class Version:
    def getversion(self):
       return "Version 0.0.1, Found on [GitHub [LINK]]"
+   def getcreator(self):
+      return "Maori Land Court Scanning Project"
 
 #return bytes in megabytes
 #http://stackoverflow.com/a/14822210
@@ -230,13 +232,26 @@ def dry_and_fix_mode(filelist, mode):
          pdfmark.writeme=True
          b.add_custom({"Provenance": provenance, "Comment": Version().getversion()})
       if pdfmark.writeme == True:
-         b.title = os.path.basename(f.name)         
+         b.title = os.path.basename(f.name)    
+         b.creator = Version().getcreator()
          b.write_mark_str()
-         b.write_mark("test_pdfmark.txt")
+         b.write_mark()
+         
+         fix_subprocess(f.name, "FIXTEST_")
+         
       else:
          sys.stderr.write("File not to be re-written: " + f.name + "\n")
       print
 
+def fix_subprocess(fname, prefix):
+   dirname = os.path.dirname(fname)
+   newf = prefix + os.path.basename(fname)
+   newname = os.path.join(dirname + os.path.sep + newf)
+   #print fname
+   
+   p = subprocess.Popen(["gs", "-o", newf, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   output, err = p.communicate()
+   
 def normalizepdf(loc, ext, mode):
 
    filelist = folderscan(args.loc, ext)
@@ -249,13 +264,14 @@ def normalizepdf(loc, ext, mode):
       dry_and_fix_mode(filelist, mode)
    
    elif mode == mod.MODFIX:
-      dry_and_fix_mode(filelist, mode)
+      #dry_and_fix_mode(filelist, mode)
       
       #recorddates(f)
 
       #call pdf command here...
       #p = subprocess.Popen(["file", f], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      #output, err = p.communicate()
+      p = subprocess.Popen(["gs", "-o", "repaired.pdf", "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", "test.pdf", "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      output, err = p.communicate()
       #print output.strip()
 
       #replaceoriginaldates(f)
@@ -293,6 +309,7 @@ def main():
    parser.add_argument('--loc', help='Mandatory: Source folder of all the PDFs.', default=False)
    parser.add_argument("--test", "--test-scan", help="Test existence of PDF markings for calibration.", action="store_true")
    parser.add_argument("--dry", "--dry-run", help="Output dry-run stats, don't write.", action="store_true")
+   parser.add_argument("--fix", "--fix-run", help="Fix files and write.", action="store_true")   
 
    start_time = time.time()
    #time script execution time roughly...
@@ -306,7 +323,7 @@ def main():
    global args
    args = parser.parse_args()
 
-   mode = getmode(args.dry, args.test, False)
+   mode = getmode(args.dry, args.test, args.fix)
 
    if args.loc:
       normalizepdf(args.loc, ".pdf", mode)
