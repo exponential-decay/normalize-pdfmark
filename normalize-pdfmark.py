@@ -202,9 +202,14 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
 def dry_and_fix_mode(filelist, mode):
 
    for f in filelist:
+     
       pdfmark = wx.PDFMark()
       provenance = ""
       with open(f, "r+b") as f:   
+      
+      
+         sys.stderr.write("Processing: " + os.path.basename(f.name) + "\n")
+      
          mm = mmap.mmap(f.fileno(), 0)        
          checkdate = getPDFMark(mm, mx.creationdate, f, mode)
          moddate = getPDFMark(mm, mx.modmark, f, mode)
@@ -249,7 +254,9 @@ def fix_subprocess(fname, prefix):
    newname = os.path.join(dirname + os.path.sep + newf)
    #print fname
    
-   p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   #gs -o newname.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dFastWebView fname.pdf "pdfmark"
+   
+   p = subprocess.Popen(["gs", "-q", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", "-dFastWebView", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, err = p.communicate()
    time.sleep(10)
    

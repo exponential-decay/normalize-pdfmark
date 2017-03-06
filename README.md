@@ -4,4 +4,5 @@ A tool to normalize PDF mark data by controlling the rewrite of the PDF via Ghos
 
 ##PDFMark Reference
 
-http://www.adobe.com/content/dam/Adobe/en/devnet/acrobat/pdfs/pdfmark_reference.pdf 
+From Adobe: http://www.adobe.com/content/dam/Adobe/en/devnet/acrobat/pdfs/pdfmark_reference.pdf 
+Writing with GS: http://milan.kupcevic.net/ghostscript-ps-pdf/#marks 

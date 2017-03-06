@@ -125,6 +125,9 @@ class WritePDFMark:
       return customlist
 
    def __format_mark__(self, key, value):
+      if value.count("(") > 0 and (value.count(")") < value.count("(")):
+         value = value + ")"
+         self.__format_mark__(key,value)
       return key + " (" + value + ")" + "\n"
 
    def write_mark(self, fname=False):
