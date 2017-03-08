@@ -23,6 +23,8 @@ class Version:
    def getcreator(self):
       return "Maori Land Court Scanning Project"
 
+new_file_prefix = "FIXTEST_"
+
 #return bytes in megabytes
 #http://stackoverflow.com/a/14822210
 def convert_size(size_bytes):
@@ -116,10 +118,12 @@ def getPDFMark(mm, mark, f, mode):
    else:
       if mode is mod.MODTEST and pdfdate is not False:
          return mx.PDFMARKOKAY, pdfdate.replace('\r', '').replace('\n', '')
-      if mode is mod.MODDRY:
+      if mode is mod.MODDRY and pdfdate is not False:
          return mx.PDFMARKOKAY, pdfdate         
-      if mode is mod.MODFIX:
+      if mode is mod.MODFIX and pdfdate is not False:
          return mx.PDFMARKOKAY, pdfdate.replace('\r', '').replace('\n', '')
+         
+      return mx.PDFMARKNONE, False
 
 def normalize_eof(eof):
    return str(eof).strip().replace('%','').replace('\r', '').replace('\n', '').replace('\00', 'NULL')
@@ -194,7 +198,7 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
                provenance = create_provenance(provenance, "Original Subject was", val)
             elif mark == mx.keywordmark:
                provenance = create_provenance(provenance, "Original Keywords were", val)
-      return provenance.strip()
+      return provenance.strip() + " "
    elif mode == mod.MODFIX:   
       return 
  
@@ -235,18 +239,17 @@ def dry_and_fix_mode(filelist, mode):
       b = wx.WritePDFMark().__init_from_object__(pdfmark)
       if len(provenance) != 0:
          pdfmark.writeme=True
-         b.add_custom({"Provenance": provenance, "Comment": Version().getversion()})
+         b.add_custom({"Provenance": provenance.strip(), "Comment": Version().getversion()})
       if pdfmark.writeme == True:
          b.title = os.path.basename(f.name)    
          b.creator = Version().getcreator()
          b.write_mark_str()
          b.write_mark()
          
-         fix_subprocess(f.name, "FIXTEST_")
+         fix_subprocess(f.name, new_file_prefix)
          
       else:
          sys.stderr.write("File not to be re-written: " + f.name + "\n")
-      print
 
 def fix_subprocess(fname, prefix):
    dirname = os.path.dirname(fname)
@@ -256,8 +259,9 @@ def fix_subprocess(fname, prefix):
    
    #gs -o newname.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dFastWebView fname.pdf "pdfmark"
    
-   p = subprocess.Popen(["gs", "-q", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", "-dFastWebView", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "-dFastWebView", "-dNumRenderingThreads=4", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, err = p.communicate()
+   sys.stderr.write("Original fsize: " + convert_size(os.path.getsize(fname)) + " New fsize: " + convert_size(os.path.getsize(newname)) + "\n")
    time.sleep(10)
    
 def normalizepdf(loc, ext, mode):
@@ -278,7 +282,7 @@ def normalizepdf(loc, ext, mode):
 
       #call pdf command here...
       #p = subprocess.Popen(["file", f], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      p = subprocess.Popen(["gs", "-o", "repaired.pdf", "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/prepress", "test.pdf", "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      p = subprocess.Popen(["gs", "-o", "repaired.pdf", "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "test.pdf", "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output, err = p.communicate()
       #print output.strip()
 
@@ -291,12 +295,15 @@ def folderscan(loc, ext):
    flist = []
    for dir_paths, dir_names, filenames in os.walk(loc):
       for f in filenames:
-         if os.path.splitext(f)[1].lower() == ext:
-            # check we have a dir separator and add if not...
-            if dir_paths.rsplit()[0][-1:] != "/":	
-               flist.append(dir_paths + "/" + f)
-            else:
-               flist.append(dir_paths + f)
+         if new_file_prefix not in f:
+            if os.path.splitext(f)[1].lower() == ext:
+               # check we have a dir separator and add if not...
+               if dir_paths.rsplit()[0][-1:] != "/":	
+                  flist.append(dir_paths + "/" + f)
+               else:
+                  flist.append(dir_paths + f)
+         else:
+            sys.stderr.write("Ignoring file (previously FIXED): " + str(f) + "\n")
    return flist
 
 def getmode(dry, test, fix):
