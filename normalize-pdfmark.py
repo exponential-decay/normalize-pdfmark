@@ -178,8 +178,10 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
    fx = fixmx.FixPDFMark()
    if mode == mod.MODDRY:
       if type == mx.PDFDATE:
-         #datetype to fix...
-         print os.path.basename(f.name), mark, "original:", fx.getstrings(out[1]), "becomes:", fx.getstrings(fx.fixdatemarks(out[1])) + "\n"
+      
+         #review datetype to fix...
+         sys.stderr.write(os.path.basename(f.name) + " " + mark + " original: " + fx.getstrings(out[1]) + " becomes: " + fx.getstrings(fx.fixdatemarks(out[1])) + "\n")
+         
          pdfmark.creationdate = fx.getstrings(fx.fixdatemarks(out[1]))
          pdfmark.writeme=True
       else:
@@ -222,7 +224,7 @@ def dry_and_fix_mode(filelist, mode):
             #We're not seeing the fields causing the validation issues. If one
             #date or the other are not there we still need to do a rewrite to fix
             #validation issues sent to us via JHOVE (and verified in PDFMark reference)
-            sys.stderr.write(f.name + ": " + "creation and modification dates missing from file. Fix mode will ignore file.")
+            sys.stderr.write(f.name + ": " + "creation and modification dates missing from file. Fix mode will ignore file." + "\n")
          else:
             for mark in mx.allmarks.keys():
                #we can ignore modified date because this will
@@ -255,19 +257,19 @@ def fix_subprocess(fname, prefix):
    dirname = os.path.dirname(fname)
    newf = prefix + os.path.basename(fname)
    newname = os.path.join(dirname + os.path.sep + newf)
-   #print fname
-   
+
+   #example command
    #gs -o newname.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dFastWebView fname.pdf "pdfmark"
    
    p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "-dFastWebView", "-dNumRenderingThreads=4", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, err = p.communicate()
-   sys.stderr.write("Original fsize: " + convert_size(os.path.getsize(fname)) + " New fsize: " + convert_size(os.path.getsize(newname)) + "\n")
+   sys.stderr.write("Original fsize: " + convert_size(os.path.getsize(fname)) + " New fsize: " + convert_size(os.path.getsize(newname)) + "\n\n")
    time.sleep(10)
    
 def normalizepdf(loc, ext, mode):
 
    filelist = pre_folderscan(args.loc, ext)
-   sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n")
+   sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n\n")
 
    if mode == mod.MODTEST:
       test_mode(filelist, mode)
@@ -281,10 +283,8 @@ def normalizepdf(loc, ext, mode):
       #recorddates(f)
 
       #call pdf command here...
-      #p = subprocess.Popen(["file", f], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       p = subprocess.Popen(["gs", "-o", "repaired.pdf", "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "test.pdf", "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output, err = p.communicate()
-      #print output.strip()
 
       #replaceoriginaldates(f)
 
