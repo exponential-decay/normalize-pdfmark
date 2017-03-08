@@ -266,7 +266,7 @@ def fix_subprocess(fname, prefix):
    
 def normalizepdf(loc, ext, mode):
 
-   filelist = folderscan(args.loc, ext)
+   filelist = pre_folderscan(args.loc, ext)
    sys.stderr.write("No. files discovered: " + str(len(filelist)) + "\n")
 
    if mode == mod.MODTEST:
@@ -288,10 +288,13 @@ def normalizepdf(loc, ext, mode):
 
       #replaceoriginaldates(f)
 
-   #sys.stderr.write("No. old files: " + str(len(filelist)) + "\n")
-   #sys.stderr.write("No. new files: " + str(len(filelist)) + "\n")
 
-def folderscan(loc, ext):
+   fixedlist = pre_folderscan(args.loc, ext)
+
+   sys.stderr.write("No. old files: " + str(len(filelist)) + "\n")
+   sys.stderr.write("No. new files: " + str(len(fixedlist)) + "\n")
+
+def pre_folderscan(loc, ext):
    flist = []
    for dir_paths, dir_names, filenames in os.walk(loc):
       for f in filenames:
@@ -304,6 +307,19 @@ def folderscan(loc, ext):
                   flist.append(dir_paths + f)
          else:
             sys.stderr.write("Ignoring file (previously FIXED): " + str(f) + "\n")
+   return flist
+
+def post_folderscan(loc, ext):
+   flist = []
+   for dir_paths, dir_names, filenames in os.walk(loc):
+      for f in filenames:
+         if new_file_prefix in f:
+            if os.path.splitext(f)[1].lower() == ext:
+               # check we have a dir separator and add if not...
+               if dir_paths.rsplit()[0][-1:] != "/":	
+                  flist.append(dir_paths + "/" + f)
+               else:
+                  flist.append(dir_paths + f)
    return flist
 
 def getmode(dry, test, fix):
