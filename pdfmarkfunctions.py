@@ -3,9 +3,16 @@
 
 import os
 import sys
+import mmap
+import time
 import getsize as gs
+import version as vers
 import runmodes as mod
+import folderscan as fs
+import pdfmarkings as mx
 import writepdfmark as wx
+import fixpdfmark as fixmx
+import pdfsubprocess as sub
 
 #For code below, if we want to find the earliest in a set
 #of dates we can use the following function... along with a
@@ -156,12 +163,10 @@ def create_provenance(provenance, note, value):
 #inputs and whether they will work for us...
 def process_output(f, out, mark, type, pdfmark, provenance, mode):
    fx = fixmx.FixPDFMark()
-   if mode == mod.MODDRY:
-      if type == mx.PDFDATE:
-      
+   if mode == mod.MODDRY or mode == mod.MODFIX:
+      if type == mx.PDFDATE:      
          #review datetype to fix...
-         sys.stderr.write(os.path.basename(f.name) + " " + mark + " original: " + fx.getstrings(out[1]) + " becomes: " + fx.getstrings(fx.fixdatemarks(out[1])) + "\n")
-         
+         sys.stderr.write(os.path.basename(f.name) + " " + mark + " original: " + fx.getstrings(out[1]) + " becomes: " + fx.getstrings(fx.fixdatemarks(out[1])) + "\n")         
          pdfmark.creationdate = fx.getstrings(fx.fixdatemarks(out[1]))
          pdfmark.writeme=True
       else:
@@ -181,13 +186,12 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
             elif mark == mx.keywordmark:
                provenance = create_provenance(provenance, "Original Keywords were", val)
       return provenance.strip() + " "
-   elif mode == mod.MODFIX:   
-      return 
- 
+   else:
+      return
+
 #Process the files. Dry mode doesn't call the Ghostscript phase. 
 #Fix mode does. Creates new files based on PREFIX in folderscan.py
 def dry_and_fix_mode(filelist, mode):
-
    for f in filelist:     
       pdfmark = wx.PDFMark()
       provenance = ""
@@ -221,32 +225,21 @@ def dry_and_fix_mode(filelist, mode):
       #process, e.g. to output information about changes to any file.
       if len(provenance) != 0:
          pdfmark.writeme=True
-         b.add_custom({"Provenance": provenance.strip(), "Comment": Version().getversion()})
+         b.add_custom({"Provenance": provenance.strip(), "Comment": vers.Version().getversion()})
          
       if pdfmark.writeme == True:
+         if mode == mod.MODDRY:
+            sys.stderr.write("PDF Mark would be rewritten for this file. " + f.name + "\n")
+            
          b.title = os.path.basename(f.name)    
-         b.creator = Version().getcreator()
+         b.creator = vers.Version().getcreator()
          b.write_mark_str()
+         sys.stderr.write("\n")
 
-         if mode = mod.MODFIX:
+         if mode == mod.MODFIX:
             #create the PDFMark file and call Ghostscript
             b.write_mark()         
-            fix_subprocess(f.name, fs.new_file_prefix)
+            sub.fix_subprocess(f.name, fs.new_file_prefix)
          
       else:
-         sys.stderr.write("File not to be re-written: " + f.name + "\n")
-
-#Piece everything we've done together by calling ghostscript and 
-#adding the PDFMark to the file we're processing...     
-def fix_subprocess(fname, prefix):
-   dirname = os.path.dirname(fname)
-   newf = prefix + os.path.basename(fname)
-   newname = os.path.join(dirname + os.path.sep + newf)
-
-   #example command
-   #gs -o newname.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dFastWebView fname.pdf "pdfmark"
-   
-   p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "-dFastWebView", "-dNumRenderingThreads=4", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   output, err = p.communicate()
-   sys.stderr.write("Original fsize: " + gs.convert_size(os.path.getsize(fname)) + " New fsize: " + gs.convert_size(os.path.getsize(newname)) + "\n\n")
-   time.sleep(10)         
+         sys.stderr.write("File not to be re-written: " + f.name + "\n\n")

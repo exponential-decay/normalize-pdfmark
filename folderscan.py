@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 
 new_file_prefix = "FIXTEST_"
 
