@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+import getsize as gs
+import runmodes as mod
+import writepdfmark as wx
+
 #For code below, if we want to find the earliest in a set
 #of dates we can use the following function... along with a
 #filter: if mx.allmarks[mark] == mx.PDFDATE:
@@ -20,6 +26,9 @@ def getEarlyDate(datelist):
          compr = d         
    return compr
 
+#Retrieve the PDFMark we want from the file with extra attention
+#given to the date marks we're interested in. Return based on how
+#it affects the continued processing of the file...
 def getPDFMark(mm, mark, f, mode):
    fix = fixmx.FixPDFMark()
    mm.seek(0)
@@ -90,13 +99,18 @@ def getPDFMark(mm, mark, f, mode):
          
       return mx.PDFMARKNONE, False
 
+#Normalize the EOF of the file so that we can report on it in a CSV
+#file. Impacts testing mode mainly. 
 def normalize_eof(eof):
    return str(eof).strip().replace('%','').replace('\r', '').replace('\n', '').replace('\00', 'NULL')
 
+#Get version from the PDF file so that we can test it if necessary but
+#mainly report on it in test mode csv. 
 def get_version(mm):
    mm.seek(0)
    return str(mm.read(8)).strip().replace('\r', '').replace('\n', '').replace('\00', 'NULL')
    
+#Do we have an EOF we can see at the end of the file that we can use.   
 def check_eof(mm):
    mm.seek(-8, os.SEEK_END)
    eof = mm.read(8)
@@ -113,7 +127,7 @@ def check_eof(mm):
 def test_mode(filelist, mode):
    sys.stdout.write('"filename","filesize","' + '","'.join(mx.allmarks) + '","version","eof"'  + '\n')
    for f in filelist:   
-      fsize = convert_size(os.path.getsize(f))
+      fsize = gs.convert_size(os.path.getsize(f))
       with open(f, "r+b") as f:
          row = '"' + f.name + '",'
          row = row + '"' + fsize + '",'
@@ -133,12 +147,13 @@ def test_mode(filelist, mode):
          row = row + '"' + str(version) + '",' + '"' + str(eof) + '"'  #hashes to indicate data gaps
          sys.stdout.write(row + "\n")
 
-#add to provenance
+#Cumulative generation of a provenance note for the PDF file PDFMark.
 def create_provenance(provenance, note, value):
    provenance = provenance + note + ": " + value + ". "
    return provenance
 
-#Try and figure out the results of our inputs and whether they will work for us...
+#Creation of a CSV file to try and figure out the results of our 
+#inputs and whether they will work for us...
 def process_output(f, out, mark, type, pdfmark, provenance, mode):
    fx = fixmx.FixPDFMark()
    if mode == mod.MODDRY:
@@ -169,17 +184,15 @@ def process_output(f, out, mark, type, pdfmark, provenance, mode):
    elif mode == mod.MODFIX:   
       return 
  
-#Process the files.
+#Process the files. Dry mode doesn't call the Ghostscript phase. 
+#Fix mode does. Creates new files based on PREFIX in folderscan.py
 def dry_and_fix_mode(filelist, mode):
 
-   for f in filelist:
-     
+   for f in filelist:     
       pdfmark = wx.PDFMark()
       provenance = ""
-      with open(f, "r+b") as f:   
-            
-         sys.stderr.write("Processing: " + os.path.basename(f.name) + "\n")
-      
+      with open(f, "r+b") as f:               
+         sys.stderr.write("Processing: " + os.path.basename(f.name) + "\n")      
          mm = mmap.mmap(f.fileno(), 0)        
          checkdate = getPDFMark(mm, mx.creationdate, f, mode)
          moddate = getPDFMark(mm, mx.modmark, f, mode)
@@ -203,16 +216,37 @@ def dry_and_fix_mode(filelist, mode):
                      sys.exit(1)
 
       b = wx.WritePDFMark().__init_from_object__(pdfmark)
+      
+      #A set of IF statements to fall through to establish continuation of
+      #process, e.g. to output information about changes to any file.
       if len(provenance) != 0:
          pdfmark.writeme=True
          b.add_custom({"Provenance": provenance.strip(), "Comment": Version().getversion()})
+         
       if pdfmark.writeme == True:
          b.title = os.path.basename(f.name)    
          b.creator = Version().getcreator()
          b.write_mark_str()
-         b.write_mark()
-         
-         fix_subprocess(f.name, fs.new_file_prefix)
+
+         if mode = mod.MODFIX:
+            #create the PDFMark file and call Ghostscript
+            b.write_mark()         
+            fix_subprocess(f.name, fs.new_file_prefix)
          
       else:
          sys.stderr.write("File not to be re-written: " + f.name + "\n")
+
+#Piece everything we've done together by calling ghostscript and 
+#adding the PDFMark to the file we're processing...     
+def fix_subprocess(fname, prefix):
+   dirname = os.path.dirname(fname)
+   newf = prefix + os.path.basename(fname)
+   newname = os.path.join(dirname + os.path.sep + newf)
+
+   #example command
+   #gs -o newname.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dFastWebView fname.pdf "pdfmark"
+   
+   p = subprocess.Popen(["gs", "-o", newname, "-sDEVICE=pdfwrite", "-dPDFSETTINGS=/default", "-dFastWebView", "-dNumRenderingThreads=4", fname, "pdfmark"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   output, err = p.communicate()
+   sys.stderr.write("Original fsize: " + gs.convert_size(os.path.getsize(fname)) + " New fsize: " + gs.convert_size(os.path.getsize(newname)) + "\n\n")
+   time.sleep(10)         
