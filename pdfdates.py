@@ -47,9 +47,12 @@ class PDFDates:
    
    def convert_tz(self, tz):
       if "'" not in tz:
-         return tz[0:3] + "'" + tz[3:5]
+         return tz[0:3] + "'" + tz[3:5] + "'"
       else:
-         return tz
+         if tz.count("'") != 2:
+            return tz + "'"
+         else:
+            return tz
    
    #Parse whatever format we receive into a date format, and then
    #spit it out again as something we can use...
