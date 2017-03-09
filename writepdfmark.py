@@ -192,7 +192,7 @@ class WritePDFMark:
          sys.stdout.write(self.DOCINFO + "\n")   
 
    def __getpath__(self):
-      return os.getcwd() + "\\" + self.filename
+      return os.getcwd() + os.path.sep + self.filename
       
    def __delpath__(self):
       return os.remove(self.__getpath__())
