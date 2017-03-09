@@ -4,7 +4,7 @@
 import os
 import sys
 
-new_file_prefix = "FIXTEST_"
+new_file_prefix = "FIXED_"
 
 def pre_folderscan(loc, ext):
    flist = []
