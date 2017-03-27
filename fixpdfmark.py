@@ -46,7 +46,9 @@ class FixPDFMark:
       return d.replace(str, '').strip()[1:-1].strip()
 
    def __stripall_from_dates__(self, str, d):
-      return d.replace(str, '').replace('(', '').replace(')','').replace('D:','').strip()
+      #N.B. 27 March 2017: \\n added as a fix when we found new unexpeced data in PDF, that is,
+      #previous encoder, Pixel Translations PIXPDF Ver.1.38 had an escaped newline character embedded.
+      return d.replace(str, '').replace('(', '').replace(')','').replace('D:','').replace("\\n","").strip()
 
    def __fixdate__(self, d):
       datefix = pd.PDFDates()   
